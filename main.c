@@ -2,8 +2,79 @@
 
 #include "coord.h"
 
+const static struct gcs_param PARAM_WGS_84 = {
+	.a = 6378137.0,
+	.b = 6356752.314245,
+	.alpha = 1.0/98.257223563,
+};
+
+
 int main(int argc, char **argv)
 {
-	printf("hello world\n");
+	printf("----------------test LBH<->XYZ----------------\n");
+	struct coord coord1 = {.longitude = 121.3898123, .latitude=1.000345, .altitude=789.0009};
+	printf("\tlbh_src-> longitude=%f, latitude=%f altitude=%f\n", coord1.longitude, coord1.latitude, coord1.altitude);
+	struct coord coord2;
+	gcs_xyz(&PARAM_WGS_84, &coord1, &coord2);
+	printf("\tlbh->xyz x=%f, y=%f z=%f\n", coord2.longitude, coord2.latitude, coord2.altitude);
+	struct coord coord3;
+	xyz_gcs(&PARAM_WGS_84, &coord2, &coord3);
+	printf("\txyz->lbh longitude=%f, latitude=%f altitude=%f\n", coord3.longitude, coord3.latitude, coord3.altitude);
+
+
+
+	printf("----------------test LCCCS<->XYZ----------------\n");
+	struct lcccs_param device_1 = {
+		.coord = {
+			.longitude = 130,
+			.latitude = -32,
+			.altitude = -1011
+		},
+		.xi = 0.0,
+		.eta = 0.0
+	};
+
+	struct coord point_1 = {
+		.x = 100,
+		.y = 20,
+		.z = 30
+	};
+
+	printf("\tlcccs_src-> x=%f, y=%f z=%f\n", point_1.longitude, point_1.latitude, point_1.altitude);
+	struct coord point_1_xyz;
+
+	int r = lcccs_normal_xyz(&PARAM_WGS_84, &device_1, &point_1, &point_1_xyz);
+
+	printf("\tlcccs->xyz status=%d x=%f y=%f z=%f\n", r, point_1_xyz.x, point_1_xyz.y, point_1_xyz.z);
+
+	struct coord point_1_lbh;
+
+	r = xyz_lcccs_normal(&PARAM_WGS_84, &device_1, &point_1_xyz, &point_1_lbh);
+
+	printf("\txyz->lcccs status=%d x=%f y=%f z=%f\n", r, point_1_lbh.longitude, point_1_lbh.latitude, point_1_lbh.altitude);
+
+
+	printf("----------------test LCS<->XYZ----------------\n");
+	struct lcs_param lcs_param = {
+		.coord = {
+			.longitude = 110,
+			.latitude = 15,
+			.altitude = 789
+		},
+		.A = 0.0,
+		.xi = 0.0,
+		.eta = 0.0
+	};
+
+	struct coord lcs_point = {.x = -10, .y = 212121220, .z = 789};
+
+	printf("\tlcs_src-> x=%f, y=%f z=%f\n", lcs_point.longitude, lcs_point.latitude, lcs_point.altitude);
+	struct coord lcs_xyz = {0};
+	r = lcs_normal_xyz(&PARAM_WGS_84, &lcs_param, &lcs_point, &lcs_xyz);
+	printf("\tlcs->xyz %d x=%f, y=%f, z=%f\n", 0, r, lcs_xyz.x, lcs_xyz.y, lcs_xyz.z);
+	struct coord xyz_lcs;
+	r = xyz_lcs_normal(&PARAM_WGS_84, &lcs_param, &lcs_xyz, &xyz_lcs);
+	printf("\txyz->lcs %d x=%f, y=%f, z=%f\n", 0, r, xyz_lcs.x, xyz_lcs.y, xyz_lcs.z);
+
 	return 0;
 }
