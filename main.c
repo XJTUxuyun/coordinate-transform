@@ -71,10 +71,24 @@ int main(int argc, char **argv)
 	printf("\tlcs_src-> x=%f, y=%f z=%f\n", lcs_point.longitude, lcs_point.latitude, lcs_point.altitude);
 	struct coord lcs_xyz = {0};
 	r = lcs_normal_xyz(&PARAM_WGS_84, &lcs_param, &lcs_point, &lcs_xyz);
-	printf("\tlcs->xyz %d x=%f, y=%f, z=%f\n", 0, r, lcs_xyz.x, lcs_xyz.y, lcs_xyz.z);
+	printf("\tlcs->xyz %d x=%f, y=%f, z=%f\n", r, lcs_xyz.x, lcs_xyz.y, lcs_xyz.z);
 	struct coord xyz_lcs;
 	r = xyz_lcs_normal(&PARAM_WGS_84, &lcs_param, &lcs_xyz, &xyz_lcs);
-	printf("\txyz->lcs %d x=%f, y=%f, z=%f\n", 0, r, xyz_lcs.x, xyz_lcs.y, xyz_lcs.z);
+	printf("\txyz->lcs %d x=%f, y=%f, z=%f\n", r, xyz_lcs.x, xyz_lcs.y, xyz_lcs.z);
+
+	printf("----------------test LCS<->LCCCS----------------\n");
+	struct coord lcs_1 = {.x = 123, .y = 456, .z=789};
+	printf("\tlcs_src-> x=%f, y=%f z=%f\n", lcs_1.x, lcs_1.y, lcs_1.z);
+	struct coord lcs_xyz_1;
+	lcs_normal_xyz(&PARAM_WGS_84, &lcs_param, &lcs_1, &lcs_xyz_1);
+	struct coord lcccs_xyz;
+	xyz_lcccs_normal(&PARAM_WGS_84, &device_1, &lcs_xyz_1, &lcccs_xyz);
+	printf("\tlcs->lcccs-> x=%f y=%f z=%f\n", lcccs_xyz.x, lcccs_xyz.y, lcccs_xyz.z);
+	struct coord xyz_lcccs;
+	lcccs_normal_xyz(&PARAM_WGS_84, &device_1, &lcccs_xyz, &xyz_lcccs);
+	struct coord lcs_2;
+	xyz_lcs_normal(&PARAM_WGS_84, &lcs_param, &xyz_lcccs, &lcs_2);
+	printf("\tlcccs->lcs-> x=%f, y=%f z=%f\n", lcs_2.x, lcs_2.y, lcs_2.z);
 
 	return 0;
 }

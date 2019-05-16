@@ -83,6 +83,12 @@ struct lcs_param		// launch coordinate system
 	double eta;
 };
 
+// 大地转地心
+int gcs_xyz(const struct gcs_param *gcs_param, const struct coord *src, struct coord *dst);
+
+// 地心转大地
+int xyz_gcs(const struct gcs_param *gcs_param, const struct coord *src, struct coord *dst);
+
 // 大地坐标转换
 int gcs_coord_transform(const struct coord *src, enum gcs_type src_type, struct coord *dst, enum gcs_type dst_type);
 
