@@ -173,9 +173,9 @@ int lcccs_normal_xyz(const struct gcs_param *gcs_param, const struct lcccs_param
 		return -1;
 	}
 
-	if (!lcccs_param->eta && !lcccs_param->xi)
+	if (lcccs_param->eta || lcccs_param->xi)
 	{
-		//return -2;
+		return -2;
 	}
 
 	double e_2 = 1 - pow(gcs_param->b, 2) / pow(gcs_param->a, 2);
@@ -195,6 +195,7 @@ int lcccs_normal_xyz(const struct gcs_param *gcs_param, const struct lcccs_param
 		{0, cos(-L0), sin(-L0)},
 		{0, -sin(-L0), cos(-L0)}
 	};
+
 	double matrix[3][3];
 	matrix_mul(matrix, r_x, r_z);
 	double ret[3];
@@ -219,19 +220,38 @@ int lcccs_normal_xyz_v(const struct gcs_param *gcs_param, const struct lcccs_par
 		return -1;
 	}
 
-	if (!lcccs_param->xi && !lcccs_param->eta)
+	if (lcccs_param->xi || lcccs_param->eta)
 	{
-		//return -2;
+		return -2;
 	}
 
 	double B0 = lcccs_param->coord.latitude * ARC_2_DEGREE;
 	double L0 = lcccs_param->coord.longitude * ARC_2_DEGREE;
 
+	double r_z[3][3] = {
+		{cos(B0), sin(B0), 0},
+		{-sin(B0), cos(B0), 0},
+		{0, 0, 1}
+	};
+	double r_x[3][3] = {
+		{1, 0, 0},
+		{0, cos(-L0), sin(-L0)},
+		{0, -sin(-L0), cos(-L0)}
+	};
+
+	double matrix[3][3];
+	matrix_mul(matrix, r_x, r_z);
+	double ret[3];
+	matrix_vec_mul(ret, matrix, (double[]){src_v->dx, src_v->dy, src_v->dz});
+	dst_v->dx = ret[0];
+	dst_v->dy = ret[1];
+	dst_v->dz = ret[2];
+	/*
 	dst_v->x = - sin(B0) * cos(L0) * src_v->dx - sin(L0) * src_v->dy + cos(B0) * cos(L0) * src_v->dz;
 
 	dst_v->dy = - sin(B0) * sin(L0) * src_v->dx + cos(L0) * src_v->dy + cos(B0) * sin(L0) * src_v->dz;
 
-	dst_v->dz = cos(B0) * src_v->dx + sin(B0) * src_v->dz;
+	dst_v->dz = cos(B0) * src_v->dx + sin(B0) * src_v->dz;*/
 	return 0;
 }
 
@@ -243,9 +263,9 @@ int xyz_lcccs_normal(const struct gcs_param *gcs_param, const struct lcccs_param
 		return -1;
 	}
 
-	if (!lcccs_param->xi && !lcccs_param->eta)
+	if (lcccs_param->xi || lcccs_param->eta)
 	{
-		//return -2;
+		return -2;
 	}
 
 	struct coord temp = {0}, neu_xyz = {0};
@@ -305,11 +325,39 @@ int xyz_lcccs_normal_v(const struct gcs_param *gcs_param, const struct lcccs_par
 		return -1;
 	}
 
-	if (!lcccs_param->xi && !lcccs_param->eta)
+	if (lcccs_param->xi || lcccs_param->eta)
 	{
-		//return -2;
+		return -2;
 	}
 
+	double L0 = lcccs_param->coord.longitude * ARC_2_DEGREE;
+	double B0 = lcccs_param->coord.latitude * ARC_2_DEGREE;
+
+	double r_x[3][3] = {
+		{1, 0, 0},
+		{0, cos(L0), sin(L0)},
+		{0, -sin(L0), cos(L0)}
+	};
+	double r_z[3][3] = {
+		{cos(-B0), sin(-B0), 0},
+		{-sin(-B0), cos(-B0), 0},
+		{0, 0, 1}
+	};
+	double matrix[3][3];
+	matrix_mul(matrix, r_z, r_x);
+
+	double ret[3];
+	matrix_vec_mul(ret, matrix, (double[]){
+		src_v->dx,
+		src_v->dy,
+		src_v->dz
+	});
+
+	dst_v->dx = ret[0];
+	dst_v->dy = ret[1];
+	dst_v->dz = ret[2];
+
+	/*
 	dst_v->dx = -sin(lcccs_param->coord.latitude * ARC_2_DEGREE) * cos(lcccs_param->coord.longitude * ARC_2_DEGREE) * src_v->dx - \
 			sin(lcccs_param->coord.latitude * ARC_2_DEGREE) * sin(lcccs_param->coord.longitude * ARC_2_DEGREE) * src_v->dy + \
 			cos(lcccs_param->coord.latitude * ARC_2_DEGREE) * src_v->z;
@@ -319,7 +367,7 @@ int xyz_lcccs_normal_v(const struct gcs_param *gcs_param, const struct lcccs_par
 
 	dst_v->dz = cos(lcccs_param->coord.latitude * ARC_2_DEGREE) * cos(lcccs_param->coord.longitude * ARC_2_DEGREE) * src_v->x + \
 			cos(lcccs_param->coord.latitude * ARC_2_DEGREE) * sin(lcccs_param->coord.longitude * ARC_2_DEGREE) * src_v->y + \
-			sin(lcccs_param->coord.latitude * ARC_2_DEGREE) * src_v->z;
+			sin(lcccs_param->coord.latitude * ARC_2_DEGREE) * src_v->z;*/
 
 	return 0;
 }
@@ -332,9 +380,9 @@ int lcs_normal_xyz(const struct gcs_param *gcs_param, const struct lcs_param *lc
 		return -1;
 	}
 
-	if (!lcs_param->xi && !lcs_param->eta)
+	if (lcs_param->xi || lcs_param->eta)
 	{
-		//return -2;
+		return -2;
 	}
 
 	double e_2 = 1 - pow(gcs_param->b, 2) / pow(gcs_param->a, 2);
@@ -382,6 +430,51 @@ int lcs_normal_xyz(const struct gcs_param *gcs_param, const struct lcs_param *lc
 	return 0;
 }
 
+int lcs_normal_xyz_v(const struct gcs_param *gcs, const struct lcs_param *lcs_param, const struct coord *src_v, struct coord *dst_v)
+{
+	if (!gcs || !lcs_param || !src_v || !dst_v)
+	{
+		return -1;
+	}
+	if (lcs_param->xi || lcs_param->eta)
+	{
+		return -1;
+	}
+
+	double B0 = lcs_param->coord.latitude * ARC_2_DEGREE;
+	double L0 = lcs_param->coord.longitude * ARC_2_DEGREE;
+	double A = lcs_param->A * ARC_2_DEGREE;
+
+	double r_z[3][3] = {
+		{cos(B0), sin(B0), 0},
+		{-sin(B0), cos(B0), 0},
+		{0, 0, 1}
+	};
+	double r_x[3][3] = {
+		{1, 0, 0},
+		{0, cos(-L0), sin(-L0)},
+		{0, -sin(-L0), cos(-L0)}
+	};
+	double r_y[3][3] = {
+		{cos(A), 0, sin(A)},
+		{0, 1, 0},
+		{-sin(A), 0, cos(A)}
+	};
+
+	double matrix_1[3][3] = {0}, matrix_2[3][3] = {0};
+	matrix_mul(matrix_1, r_x, r_z);
+	matrix_mul(matrix_2, matrix_1, r_y);
+
+	double ret[3];
+
+	matrix_vec_mul(ret, matrix_2, (double[]){src_v->dx, src_v->dy, src_v->dz});
+
+	dst_v->dx = ret[0];
+	dst_v->dy = ret[1];
+	dst_v->dz = ret[2];
+	return 0;
+}
+
 // 空间球心直角坐标系-> 发射坐标系 (法线坐标系)
 int xyz_lcs_normal(const struct gcs_param *gcs_param, const struct lcs_param *lcs_param, const struct coord *src, struct coord *dst)
 {
@@ -390,9 +483,9 @@ int xyz_lcs_normal(const struct gcs_param *gcs_param, const struct lcs_param *lc
 		return -1;
 	}
 
-	if (!lcs_param->xi && !lcs_param->eta)
+	if (lcs_param->xi || lcs_param->eta)
 	{
-		//return -2;
+		return -2;
 	}
 
 	struct coord temp = {0}, lcs_xyz = {0};
@@ -438,6 +531,55 @@ int xyz_lcs_normal(const struct gcs_param *gcs_param, const struct lcs_param *lc
 	dst->z = ret[2];
 
 	return 0;
+}
+
+int xyz_lcs_normal_v(const struct gcs_param *gcs_param, const struct lcs_param *lcs_param, const struct coord *src_v, struct coord *dst_v)
+{
+	if (!gcs_param || !lcs_param || !src_v || !dst_v)
+	{
+		return -1;
+	}
+	if (lcs_param->xi || lcs_param->eta)
+	{
+		return -2;
+	}
+
+	double L0 = lcs_param->coord.longitude * ARC_2_DEGREE;
+	double B0 = lcs_param->coord.latitude * ARC_2_DEGREE;
+	double A = lcs_param->A * ARC_2_DEGREE;
+
+	double matrix_1[3][3] = {0.0}, matrix_2[3][3] = {0.0};
+
+	double r_x[3][3] = {
+		{1, 0, 0},
+		{0, cos(L0), sin(L0)},
+		{0, -sin(L0), cos(L0)}
+	};
+
+	double r_y[3][3] = {
+		{cos(-A), 0, sin(-A)},
+		{0, 1, 0},
+		{-sin(-A), 0, cos(-A)}
+	};
+
+	double r_z[3][3] = {
+		{cos(-B0), sin(-B0), 0},
+		{-sin(-B0), cos(-B0), 0},
+		{0, 0, 1}
+	};
+
+	matrix_mul(matrix_1, r_z, r_x);
+	matrix_mul(matrix_2, matrix_1, r_y);
+	
+	double ret[3] = {0};
+	matrix_vec_mul(ret, matrix_2, (double[]){src_v->dx, src_v->dy, src_v->dz});
+
+	dst_v->dx = ret[0];
+	dst_v->dy = ret[1];
+	dst_v->dz = ret[2];
+
+	return 0;
+
 }
 
 int gcs_coord_transform(const struct coord *src, enum gcs_type src_type, struct coord *dst, enum gcs_type dst_type)
