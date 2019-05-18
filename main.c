@@ -12,7 +12,7 @@ const static struct gcs_param PARAM_WGS_84 = {
 int main(int argc, char **argv)
 {
 	printf("----------------test LBH<->XYZ----------------\n");
-	struct coord coord1 = {.longitude = 121.3898123, .latitude=1.000345, .altitude=789.0009};
+	struct coord coord1 = {.longitude = 130, .latitude=0, .altitude=789.0009};
 	printf("\tlbh_src-> longitude=%f, latitude=%f altitude=%f\n", coord1.longitude, coord1.latitude, coord1.altitude);
 	struct coord coord2;
 	gcs_xyz(&PARAM_WGS_84, &coord1, &coord2);
