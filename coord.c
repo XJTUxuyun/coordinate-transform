@@ -682,3 +682,64 @@ int lcccs_coord_transform1(enum gcs_type src_type, const struct lcccs_param *src
 	return r;
 }
 
+int lcccs_lcs_coord_transform(enum gcs_type gcs_type, const struct lcccs_param *src_param, const struct coord *src, const struct lcs_param *dst_param, struct coord *dst)
+{
+	return lcccs_lcs_coord_transform1(gcs_type, src_param, src, gcs_type, dst_param, dst);
+}
+
+int lcccs_lcs_coord_transform1(enum gcs_type src_type, const struct lcccs_param *src_param, const struct coord *src, enum gcs_type dst_type, const struct lcs_param *dst_param, struct coord *dst)
+{
+	if (!src_param || !src || !dst_param || !dst)
+	{
+		return -1;
+	}
+	if (src_param->xi || src_param->eta || dst_param->xi || dst_param->eta)
+	{
+		return -2;
+	}
+
+	struct coord temp = {0};
+	int r = 0;
+
+	switch (src_type)
+	{
+		case BEI_JING_54:
+			r = lcccs_normal_xyz(&PARAM_BEI_JING_54, src_param, src, &temp);
+			break;
+		case XI_AN_80:
+			r = lcccs_normal_xyz(&PARAM_XI_AN_80, src_param, src, &temp);
+			break;
+		case WGS_84:
+			r = lcccs_normal_xyz(&PARAM_WGS_84, src_param, src, &temp);
+			break;
+		case CGCS_2000:
+			r = lcccs_normal_xyz(&PARAM_CGCS_2000, src_param, src, &temp);
+			break;
+		default:
+			return -3;
+	}
+	if (r)
+	{
+		return r;
+	}
+
+	switch (dst_type)
+	{
+		case BEI_JING_54:
+			r = xyz_lcs_normal(&PARAM_BEI_JING_54, dst_param, &temp, dst);
+			break;
+		case XI_AN_80:
+			r = xyz_lcs_normal(&PARAM_XI_AN_80, dst_param, &temp, dst);
+			break;
+		case WGS_84:
+			r = xyz_lcs_normal(&PARAM_WGS_84, dst_param, &temp, dst);
+			break;
+		case CGCS_2000:
+			r = xyz_lcs_normal(&PARAM_CGCS_2000, dst_param, &temp, dst);
+			break;
+		default:
+			return -3;
+	}
+	return r;
+}
+

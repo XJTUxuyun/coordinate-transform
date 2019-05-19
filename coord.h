@@ -97,4 +97,10 @@ int lcccs_coord_transform(enum gcs_type type, const struct lcccs_param *src_para
 
 // 站心坐标转换（不同参考椭球）
 int lcccs_coord_transform1(enum gcs_type src_type, const struct lcccs_param *src_param, const struct coord *src, enum gcs_type dst_type, const struct lcccs_param *dst_param, struct coord *dst);
+
+// 站心转发射系（同一参考椭球）
+int lcccs_lcs_coord_transform(enum gcs_type type, const struct lcccs_param *src_param, const struct coord *src, const struct lcs_param *dst_param, struct coord *dst);
+
+// 站心转发射系(不同参考椭球)
+int lcccs_lcs_coord_transform1(enum gcs_type src_type, const struct lcccs_param *src_param, const struct coord *src, enum gcs_type dst_type, const struct lcs_param *dst_param, struct coord *dst);
 #endif
