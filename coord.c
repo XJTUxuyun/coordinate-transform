@@ -96,9 +96,9 @@ int gcs_xyz(const struct gcs_param *gcs_param, const struct coord *src, struct c
 	// x->y
 	// z->x
 	// y->z
-	dst->y = (N + H) * cos(B) * cos(L);
-	dst->z = (N + H) * cos(B) * sin(L);
-	dst->x = (N * (1 - e_2) + H) * sin(B);
+	dst->x = (N + H) * cos(B) * cos(L);
+	dst->y = (N + H) * cos(B) * sin(L);
+	dst->z = (N * (1 - e_2) + H) * sin(B);
 	return 0;
 }
 
@@ -111,13 +111,13 @@ int xyz_gcs(const struct gcs_param *gcs_param, const struct coord *src, struct c
 	}
 
 	double e_2 = 1 - pow(gcs_param->b, 2) / pow(gcs_param->a, 2);
-	double B2 = atan(src->x / sqrt(pow(src->y, 2) + pow(src->z, 2)));
+	double B2 = atan(src->z / sqrt(pow(src->x, 2) + pow(src->y, 2)));
 	double B1 = 0;
 	double N = 0;
 	while (1)
 	{
 		N = gcs_param->a / sqrt(1 - e_2 * pow(sin(B2), 2));
-		B1 = atan((src->x + N * e_2 * sin(B2)) / sqrt(pow(src->y, 2) + pow(src->z, 2)));
+		B1 = atan((src->z + N * e_2 * sin(B2)) / sqrt(pow(src->x, 2) + pow(src->y, 2)));
 		if (fabs(B1 - B2) < 1e-15)
 		{
 			break;
@@ -127,38 +127,38 @@ int xyz_gcs(const struct gcs_param *gcs_param, const struct coord *src, struct c
 
 	dst->latitude = B2 / ARC_2_DEGREE;
 
-	if (src->y == 0.0)
+	if (src->x == 0.0)
 	{
-		if (src->z > 0)
+		if (src->y > 0)
 		{
 			dst->longitude = 90;
-		}else if (src->z < 0)
+		}else if (src->y < 0)
 		{
 			dst->longitude = -90;
 		}else
 		{
 			dst->longitude = 0;
 		}
-	}else if (src->y > 0)
+	}else if (src->x > 0)
 	{
 		dst->longitude = atan(src->z / src->y) / ARC_2_DEGREE;
-	}else if (src->y < 0)
+	}else if (src->x < 0)
 	{
-		if (src->z >=0)
+		if (src->y >=0)
 		{
-			dst->longitude = atan(src->z / src->y) / ARC_2_DEGREE + 180 ;
+			dst->longitude = atan(src->y / src->x) / ARC_2_DEGREE + 180 ;
 		}else
 		{
-			dst->longitude = atan(src->z / src->y) / ARC_2_DEGREE - 180;
+			dst->longitude = atan(src->y / src->x) / ARC_2_DEGREE - 180;
 		}
 	}
 
 	if (fabs(dst->latitude) <= 1.0)
 	{
-		dst->altitude = sqrt(pow(src->y, 2) + pow(src->z, 2)) / cos(B2) - N;
+		dst->altitude = sqrt(pow(src->x, 2) + pow(src->y, 2)) / cos(B2) - N;
 	}else
 	{
-		dst->altitude = src->x / sin(B2) - N*(1 - e_2);
+		dst->altitude = src->z / sin(B2) - N*(1 - e_2);
 	}
 
 	//dst->altitude -= gcs_param->a;
@@ -185,9 +185,15 @@ int lcccs_normal_xyz(const struct gcs_param *gcs_param, const struct lcccs_param
 	double W = sqrt(1 - e_2 * pow(sin(B0), 2));
 	double N0 = gcs_param->a / W;
 
+	double r_y[3][3] = {
+		{0, 0, 1},
+		{0, 1, 0},
+		{-1, 0, 0}
+	};
+
 	double r_z[3][3] = {
-		{cos(B0), sin(B0), 0},
-		{-sin(B0), cos(B0), 0},
+		{cos(B0 - M_PI / 2), sin(B0 - M_PI / 2), 0},
+		{-sin(B0 - M_PI / 2), cos(B0 - M_PI / 2), 0},
 		{0, 0, 1}
 	};
 	double r_x[3][3] = {
@@ -196,14 +202,15 @@ int lcccs_normal_xyz(const struct gcs_param *gcs_param, const struct lcccs_param
 		{0, -sin(-L0), cos(-L0)}
 	};
 
-	double matrix[3][3];
-	matrix_mul(matrix, r_x, r_z);
+	double matrix1[3][3], matrix2[3][3];
+	matrix_mul(matrix1, r_z, r_x);
+	matrix_mul(matrix2, matrix1, r_y);
 	double ret[3];
-	matrix_vec_mul(ret, matrix, (double[]){src->x, src->y, src->z});
+	matrix_vec_mul(ret, matrix2, (double[]){src->x, src->y, src->z});
 	vec_add(ret, ret, (double[]){
-		(N0 * (1 - e_2) + H0) * sin(B0),
 		(N0 + H0) * cos(B0) * cos(L0),
-		(N0 + H0) * cos(B0) * sin(L0)
+		(N0 + H0) * cos(B0) * sin(L0),
+		(N0 * (1 - e_2) + H0) * sin(B0)
 	});
 
 	dst->x = ret[0];
@@ -278,21 +285,28 @@ int xyz_lcccs_normal(const struct gcs_param *gcs_param, const struct lcccs_param
 	double L0 = lcccs_param->coord.longitude * ARC_2_DEGREE;
 	double B0 = lcccs_param->coord.latitude * ARC_2_DEGREE;
 
+	double r_y[3][3] = {
+		{0, 0, -1},
+		{0, 1, 0},
+		{1, 0, 0}
+	};
+
 	double r_x[3][3] = {
 		{1, 0, 0},
 		{0, cos(L0), sin(L0)},
 		{0, -sin(L0), cos(L0)}
 	};
 	double r_z[3][3] = {
-		{cos(-B0), sin(-B0), 0},
-		{-sin(-B0), cos(-B0), 0},
+		{cos(M_PI / 2 -B0), sin(M_PI / 2 -B0), 0},
+		{-sin(M_PI / 2 -B0), cos(M_PI / 2 -B0), 0},
 		{0, 0, 1}
 	};
-	double matrix[3][3];
-	matrix_mul(matrix, r_z, r_x);
+	double matrix1[3][3], matrix2[3][3];
+	matrix_mul(matrix1, r_y, r_x);
+	matrix_mul(matrix2, matrix1, r_z);
 
 	double ret[3];
-	matrix_vec_mul(ret, matrix, (double[]){
+	matrix_vec_mul(ret, matrix2, (double[]){
 		temp.x,
 		temp.y,
 		temp.z
@@ -394,8 +408,8 @@ int lcs_normal_xyz(const struct gcs_param *gcs_param, const struct lcs_param *lc
 	double N0 = gcs_param->a / W;
 
 	double r_z[3][3] = {
-		{cos(B0), sin(B0), 0},
-		{-sin(B0), cos(B0), 0},
+		{cos(B0 - M_PI / 2), sin(B0 - M_PI / 2), 0},
+		{-sin(B0 - M_PI / 2), cos(B0 - M_PI / 2), 0},
 		{0, 0, 1}
 	};
 	double r_x[3][3] = {
@@ -404,23 +418,23 @@ int lcs_normal_xyz(const struct gcs_param *gcs_param, const struct lcs_param *lc
 		{0, -sin(-L0), cos(-L0)}
 	};
 	double r_y[3][3] = {
-		{cos(A), 0, sin(A)},
+		{cos(A + M_PI / 2), 0, sin(A + M_PI / 2)},
 		{0, 1, 0},
-		{-sin(A), 0, cos(A)}
+		{-sin(A + M_PI / 2), 0, cos(A + M_PI / 2)}
 	};
 
 	double matrix_1[3][3] = {0}, matrix_2[3][3] = {0};
-	matrix_mul(matrix_1, r_x, r_z);
-	matrix_mul(matrix_2, matrix_1, r_y);
+	matrix_mul(matrix_1, r_y, r_x);
+	matrix_mul(matrix_2, matrix_1, r_z);
 
 	double ret[3];
 
 	matrix_vec_mul(ret, matrix_2, (double[]){src->x, src->y, src->z});
 
 	vec_add(ret, ret, (double[]){
-		(N0 * (1 - e_2) + H0) * sin(B0),
 		(N0 + H0) * cos(B0) * cos(L0),
-		(N0 + H0) * cos(B0) * sin(L0)
+		(N0 + H0) * cos(B0) * sin(L0),
+		(N0 * (1 - e_2) + H0) * sin(B0),
 	});
 
 	dst->x = ret[0];
@@ -446,8 +460,8 @@ int lcs_normal_xyz_v(const struct gcs_param *gcs, const struct lcs_param *lcs_pa
 	double A = lcs_param->A * ARC_2_DEGREE;
 
 	double r_z[3][3] = {
-		{cos(B0), sin(B0), 0},
-		{-sin(B0), cos(B0), 0},
+		{cos(M_PI / 2 - B0), sin(M_PI / 2 - B0), 0},
+		{-sin(M_PI / 2 - B0), cos(M_PI / 2 - B0), 0},
 		{0, 0, 1}
 	};
 	double r_x[3][3] = {
@@ -509,14 +523,14 @@ int xyz_lcs_normal(const struct gcs_param *gcs_param, const struct lcs_param *lc
 	};
 
 	double r_y[3][3] = {
-		{cos(-A), 0, sin(-A)},
+		{cos(-A - M_PI / 2), 0, sin(-A - M_PI / 2)},
 		{0, 1, 0},
-		{-sin(-A), 0, cos(-A)}
+		{-sin(-A - M_PI / 2), 0, cos(-A - M_PI / 2)}
 	};
 
 	double r_z[3][3] = {
-		{cos(-B0), sin(-B0), 0},
-		{-sin(-B0), cos(-B0), 0},
+		{cos(-B0 + M_PI / 2), sin(-B0 + M_PI / 2), 0},
+		{-sin(-B0 + M_PI / 2), cos(-B0 + M_PI / 2), 0},
 		{0, 0, 1}
 	};
 
