@@ -11,8 +11,10 @@ const static struct gcs_param PARAM_WGS_84 = {
 
 int main(int argc, char **argv)
 {
+	printf("a->%f b->%f\n", PARAM_WGS_84.a, PARAM_WGS_84.b);
+
 	printf("----------------test LBH<->XYZ----------------\n");
-	struct coord coord1 = {.longitude = 180, .latitude=90, .altitude=10};
+	struct coord coord1 = {.longitude = 90, .latitude=0, .altitude=10};
 	printf("\tlbh_src-> longitude=%f, latitude=%f altitude=%f\n", coord1.longitude, coord1.latitude, coord1.altitude);
 	struct coord coord2;
 	gcs_xyz(&PARAM_WGS_84, &coord1, &coord2);
@@ -26,16 +28,16 @@ int main(int argc, char **argv)
 	printf("----------------test LCCCS<->XYZ----------------\n");
 	struct lcccs_param device_1 = {
 		.coord = {
-			.longitude = 130,
-			.latitude = -32,
-			.altitude = -1011
+			.longitude = 90,
+			.latitude = 0,
+			.altitude = 0
 		},
 		.xi = 0.0,
 		.eta = 0.0
 	};
 
 	struct coord point_1 = {
-		.x = 100,
+		.x = 10,
 		.y = 20,
 		.z = 30
 	};
@@ -57,16 +59,16 @@ int main(int argc, char **argv)
 	printf("----------------test LCS<->XYZ----------------\n");
 	struct lcs_param lcs_param = {
 		.coord = {
-			.longitude = 110,
-			.latitude = 15,
-			.altitude = 789
+			.longitude = 0,
+			.latitude = 0,
+			.altitude = 0
 		},
 		.A = 0.0,
 		.xi = 0.0,
 		.eta = 0.0
 	};
 
-	struct coord lcs_point = {.x = -10, .y = 212121220, .z = 789};
+	struct coord lcs_point = {.x = -10, .y = 0, .z = 789};
 
 	printf("\tlcs_src-> x=%f, y=%f z=%f\n", lcs_point.longitude, lcs_point.latitude, lcs_point.altitude);
 	struct coord lcs_xyz = {0};

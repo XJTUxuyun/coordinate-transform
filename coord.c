@@ -186,20 +186,20 @@ int lcccs_normal_xyz(const struct gcs_param *gcs_param, const struct lcccs_param
 	double N0 = gcs_param->a / W;
 
 	double r_y[3][3] = {
-		{0, 0, 1},
+		{0, 0, -1},
 		{0, 1, 0},
-		{-1, 0, 0}
+		{1, 0, 0}
 	};
 
 	double r_z[3][3] = {
-		{cos(B0 - M_PI / 2), sin(B0 - M_PI / 2), 0},
-		{-sin(B0 - M_PI / 2), cos(B0 - M_PI / 2), 0},
+		{cos(-L0 + M_PI / 2), sin(-L0 + M_PI / 2), 0},
+		{-sin(-L0 + M_PI / 2), cos(-L0 + M_PI / 2), 0},
 		{0, 0, 1}
 	};
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(-L0), sin(-L0)},
-		{0, -sin(-L0), cos(-L0)}
+		{0, cos(-B0), sin(-B0)},
+		{0, -sin(-B0), cos(-B0)}
 	};
 
 	double matrix1[3][3], matrix2[3][3];
@@ -216,6 +216,12 @@ int lcccs_normal_xyz(const struct gcs_param *gcs_param, const struct lcccs_param
 	dst->x = ret[0];
 	dst->y = ret[1];
 	dst->z = ret[2];
+	/*
+	dst->x = - sin(B0) * cos(L0) * src->x - sin(L0) * src->y + cos(B0) * cos(L0) * src->z;
+
+	dst->y = - sin(B0) * sin(L0) * src->x + cos(L0) * src->y + cos(B0) * sin(L0) * src->z;
+
+	dst->z = cos(B0) * src->x + sin(B0) * src->z;*/
 
 	return 0;
 }
@@ -236,20 +242,20 @@ int lcccs_normal_xyz_v(const struct gcs_param *gcs_param, const struct lcccs_par
 	double L0 = lcccs_param->coord.longitude * ARC_2_DEGREE;
 
 	double r_y[3][3] = {
-		{0, 0, 1},
+		{0, 0, -1},
 		{0, 1, 0},
-		{-1, 0, 0}
+		{1, 0, 0}
 	};
 
 	double r_z[3][3] = {
-		{cos(B0 - M_PI / 2), sin(B0 - M_PI / 2), 0},
-		{-sin(B0 - M_PI / 2), cos(B0 - M_PI / 2), 0},
+		{cos(-L0 + M_PI / 2), sin(-L0 + M_PI / 2), 0},
+		{-sin(-L0 + M_PI / 2), cos(-L0 + M_PI / 2), 0},
 		{0, 0, 1}
 	};
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(-L0), sin(-L0)},
-		{0, -sin(-L0), cos(-L0)}
+		{0, cos(-B0), sin(-B0)},
+		{0, -sin(-B0), cos(-B0)}
 	};
 
 	double matrix1[3][3], matrix2[3][3];
@@ -294,19 +300,19 @@ int xyz_lcccs_normal(const struct gcs_param *gcs_param, const struct lcccs_param
 	double B0 = lcccs_param->coord.latitude * ARC_2_DEGREE;
 
 	double r_y[3][3] = {
-		{0, 0, -1},
+		{0, 0, 1},
 		{0, 1, 0},
-		{1, 0, 0}
+		{-1, 0, 0}
 	};
 
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(L0), sin(L0)},
-		{0, -sin(L0), cos(L0)}
+		{0, cos(B0), sin(B0)},
+		{0, -sin(B0), cos(B0)}
 	};
 	double r_z[3][3] = {
-		{cos(M_PI / 2 -B0), sin(M_PI / 2 -B0), 0},
-		{-sin(M_PI / 2 -B0), cos(M_PI / 2 -B0), 0},
+		{cos(-M_PI / 2 + L0), sin(-M_PI / 2 + L0), 0},
+		{-sin(-M_PI / 2 + L0), cos(-M_PI / 2 + L0), 0},
 		{0, 0, 1}
 	};
 	double matrix1[3][3], matrix2[3][3];
@@ -356,21 +362,23 @@ int xyz_lcccs_normal_v(const struct gcs_param *gcs_param, const struct lcccs_par
 	double B0 = lcccs_param->coord.latitude * ARC_2_DEGREE;
 
 	double r_y[3][3] = {
-		{0, 0, -1},
+		{0, 0, 1},
 		{0, 1, 0},
-		{1, 0, 0}
+		{-1, 0, 0}
 	};
 
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(L0), sin(L0)},
-		{0, -sin(L0), cos(L0)}
+		{0, cos(B0), sin(B0)},
+		{0, -sin(B0), cos(B0)}
 	};
+
 	double r_z[3][3] = {
-		{cos(M_PI / 2 -B0), sin(M_PI / 2 -B0), 0},
-		{-sin(M_PI / 2 -B0), cos(M_PI / 2 -B0), 0},
+		{cos(-M_PI / 2 + L0), sin(-M_PI / 2 + L0), 0},
+		{-sin(-M_PI / 2 + L0), cos(-M_PI / 2 + L0), 0},
 		{0, 0, 1}
 	};
+
 	double matrix1[3][3], matrix2[3][3];
 	matrix_mul(matrix1, r_y, r_x);
 	matrix_mul(matrix2, matrix1, r_z);
@@ -423,19 +431,19 @@ int lcs_normal_xyz(const struct gcs_param *gcs_param, const struct lcs_param *lc
 	double N0 = gcs_param->a / W;
 
 	double r_z[3][3] = {
-		{cos(B0 - M_PI / 2), sin(B0 - M_PI / 2), 0},
-		{-sin(B0 - M_PI / 2), cos(B0 - M_PI / 2), 0},
+		{cos(-L0 + M_PI / 2), sin(-L0 + M_PI / 2), 0},
+		{-sin(-L0 + M_PI / 2), cos(-L0 + M_PI / 2), 0},
 		{0, 0, 1}
 	};
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(-L0), sin(-L0)},
-		{0, -sin(-L0), cos(-L0)}
+		{0, cos(-B0), sin(-B0)},
+		{0, -sin(-B0), cos(-B0)}
 	};
 	double r_y[3][3] = {
-		{cos(A + M_PI / 2), 0, sin(A + M_PI / 2)},
+		{cos(A + M_PI / 2), 0, -sin(A + M_PI / 2)},
 		{0, 1, 0},
-		{-sin(A + M_PI / 2), 0, cos(A + M_PI / 2)}
+		{sin(A + M_PI / 2), 0, cos(A + M_PI / 2)}
 	};
 
 	double matrix_1[3][3] = {0}, matrix_2[3][3] = {0};
@@ -481,8 +489,8 @@ int lcs_normal_xyz_v(const struct gcs_param *gcs, const struct lcs_param *lcs_pa
 	};
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(-L0), sin(-L0)},
-		{0, -sin(-L0), cos(-L0)}
+		{0, cos(B0), sin(B0)},
+		{0, -sin(B0), cos(B0)}
 	};
 	double r_y[3][3] = {
 		{cos(A), 0, sin(A)},
@@ -533,19 +541,19 @@ int xyz_lcs_normal(const struct gcs_param *gcs_param, const struct lcs_param *lc
 
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(L0), sin(L0)},
+		{0, cos(B0), sin(B0)},
 		{0, -sin(L0), cos(L0)}
 	};
 
 	double r_y[3][3] = {
-		{cos(-A - M_PI / 2), 0, sin(-A - M_PI / 2)},
+		{cos(-A - M_PI / 2), 0, -sin(-A - M_PI / 2)},
 		{0, 1, 0},
-		{-sin(-A - M_PI / 2), 0, cos(-A - M_PI / 2)}
+		{sin(-A - M_PI / 2), 0, cos(-A - M_PI / 2)}
 	};
 
 	double r_z[3][3] = {
-		{cos(-B0 + M_PI / 2), sin(-B0 + M_PI / 2), 0},
-		{-sin(-B0 + M_PI / 2), cos(-B0 + M_PI / 2), 0},
+		{cos(L0 - M_PI / 2), sin(L0 - M_PI / 2), 0},
+		{-sin(L0 - M_PI / 2), cos(L0 - M_PI / 2), 0},
 		{0, 0, 1}
 	};
 
@@ -581,19 +589,19 @@ int xyz_lcs_normal_v(const struct gcs_param *gcs_param, const struct lcs_param *
 
 	double r_x[3][3] = {
 		{1, 0, 0},
-		{0, cos(L0), sin(L0)},
+		{0, cos(B0), sin(B0)},
 		{0, -sin(L0), cos(L0)}
 	};
 
 	double r_y[3][3] = {
-		{cos(-A - M_PI / 2), 0, sin(-A - M_PI / 2)},
+		{cos(-A - M_PI / 2), 0, -sin(-A - M_PI / 2)},
 		{0, 1, 0},
-		{-sin(-A - M_PI / 2), 0, cos(-A - M_PI / 2)}
+		{sin(-A - M_PI / 2), 0, cos(-A - M_PI / 2)}
 	};
 
 	double r_z[3][3] = {
-		{cos(-B0 + M_PI / 2), sin(-B0 + M_PI / 2), 0},
-		{-sin(-B0 + M_PI / 2), cos(-B0 + M_PI / 2), 0},
+		{cos(L0 - M_PI / 2), sin(L0 - M_PI / 2), 0},
+		{-sin(L0 - M_PI / 2), cos(L0 - M_PI / 2), 0},
 		{0, 0, 1}
 	};
 
